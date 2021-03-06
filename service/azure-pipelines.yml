@@ -1,0 +1,39 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    version: '5.0.x'
+    includePreviewVersions: false
+
+- task: DotNetCoreCLI@2
+  displayName: Execute Unit Tests
+  inputs:
+    command: 'test'
+    projects: 'SoliTests/SoliTests.csproj'
+
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    projects: 'service/Soli.csproj'
+    arguments: '-c Release --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+    
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: 'sc_fm3048_soli'
+    appType: 'webApp'
+    appName: 'soliservice'
+    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+    deploymentMethod: 'auto'
+    
+
